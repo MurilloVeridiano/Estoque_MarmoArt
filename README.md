@@ -14,7 +14,7 @@ API RESTful desenvolvida em **.NET 9** para gerenciamento inteligente de estoque
 
 ## 🚀 Sobre o Projeto
 
-O **Estoque MarmoArt** foi idealizado para resolver desafios práticos de controle de inventário e conformidade de segurança (EPIs) em ambiente industrial/comercial. O sistema centraliza o fluxo de materiais, permitindo rastrear desde a entrada de chapas e insumos até a distribuição de equipamentos de proteção aos funcionários, garantindo histórico temporal e confiabilidade nos dados.
+O **Estoque MarmoArt** foi idealizado para resolver desafios práticos de controle de inventário e conformidade de segurança (EPIs) em ambiente industrial/comercial. O sistema centraliza o fluxo de materiais, permitindo rastrear desde a entrada de insumos até a distribuição de equipamentos de proteção aos funcionários, garantindo histórico temporal e confiabilidade nos dados.
 
 ---
 
