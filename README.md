@@ -52,11 +52,11 @@ MarmorariaProjeto/
 ├── Migrations/       # Histórico de migrações do banco de dados
 ├── UseCases/         # Regras de negócio isoladas (GetAll, GetById, Register, Delete)
 └── Program.cs        # Configuração de serviços e pipeline da aplicação
-
+```
 ---
 
 ## ⚙️ Como Executar o Projeto
-
+```text
 **Pré-requisitos**
 * [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) instalado na sua máquina.
 * SQL Server (ou LocalDB) configurado.
@@ -80,8 +80,8 @@ MarmorariaProjeto/
 
 6.Inicie a aplicação:
   dotnet run
-
+```
 ---
 
-##👨‍💻 Desenvolvedor
+## 👨‍💻 Desenvolvedor
 Feito com dedicação por Murillo Veridiano. Se este projeto te chamou a atenção, sinta-se à vontade para entrar em contato!
