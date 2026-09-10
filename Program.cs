@@ -1,67 +1,44 @@
-﻿class Program
-{ 
-    static void Main()
+﻿using Microsoft.EntityFrameworkCore;
+using MarmorariaProjeto.Infrastructure.Persistence;
+using MarmorariaProjeto.UseCases.ItemEstoque.GetById;
+using MarmorariaProjeto.UseCases.ItemEstoque.Register;
+using MarmorariaProjeto.UseCases.ItemEstoque.GetAll;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<MarmorariaDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Connection")));
+builder.Services.AddScoped<RegisterItemEstoqueUseCase>();
+builder.Services.AddScoped<GetItemEstoqueByIdUseCase>();
+builder.Services.AddScoped<GetItemEstoqueAllUseCase>();
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LocalDevelopment", policy =>
     {
-        //Fazer um controle de estoque
-        List<ItemEstoque> itensEstoque = new List<ItemEstoque>();
+        policy.WithOrigins(
+                "https://localhost:5001",
+                "http://localhost:5000",
+                "http://localhost:5001")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
-        short opcao;
-        do
-        {
-            //Console.Clear();
-            Console.WriteLine("=== Estoque === ");
-            Console.WriteLine("Escolha uma opcao:");
-            Console.WriteLine("[1] - Dar Baixa \n[2] - Listar \n[3] - Adicionar \n[4] - Sair");
-            opcao = short.Parse(Console.ReadLine());
+var app = builder.Build();
 
-            switch(opcao)
-            {
-                case 1:
-                    Console.WriteLine("Digite o nome do item que deseja dar baixa: ");
-                    string nomeItemBaixa = Console.ReadLine();
-                    ItemEstoque itemBaixa = itensEstoque.Find(item => item.Nome == nomeItemBaixa);
-                    if (itemBaixa != null)
-                    {
-                        Console.WriteLine("Digite a quantidade a ser retirada: ");
-                        int quantidadeBaixa = int.Parse(Console.ReadLine());
-                        itemBaixa.DarBaixa(quantidadeBaixa);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Item não encontrado.");
-                    }
-                    break;
-
-                case 2:
-                    Console.WriteLine("=== Estoque Atual ===");
-                    foreach (var item in itensEstoque)
-                    {
-                        Console.WriteLine($"Item: {item.Nome}, Quantidade: {item.Quantidade}");
-                    }
-                    break;
-                case 3:
-                    Console.WriteLine("Digite o nome do item que deseja adicionar: ");
-                    string nomeItemAdicionar = Console.ReadLine();
-                    Console.WriteLine("Digite a quantidade a ser adicionada: ");
-                    int quantidadeAdicionar = int.Parse(Console.ReadLine());
-                    ItemEstoque itemAdicionar = itensEstoque.Find(item => item.Nome == nomeItemAdicionar);
-                    if (itemAdicionar != null)
-                    {
-                        itemAdicionar.Adicionar(nomeItemAdicionar, quantidadeAdicionar);
-                    }
-                    else
-                    {
-                        ItemEstoque novoItem = new ItemEstoque(nomeItemAdicionar, quantidadeAdicionar, null);
-                        itensEstoque.Add(novoItem);
-                        Console.WriteLine($"Item {nomeItemAdicionar} adicionado ao estoque.");
-                    }
-                    break;
-            }
-
-        }while (opcao != 4);
-    
-        
-    }
-
-        
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseCors("LocalDevelopment");
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();
