@@ -1,97 +1,100 @@
-using MarmorariaProjeto.UseCases.ItemEstoque.Register;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MarmorariaProjeto.UseCases.ItemEstoque.GetById;
-using MarmorariaProjeto.UseCases.ItemEstoque.GetAll;
+using MarmorariaProjeto.UseCases.ItemEstoque;
 
-namespace MarmorariaProjeto.Controller
+namespace MarmorariaProjeto.Controller.EstoqueController
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class EstoqueController : ControllerBase
     {
-
-        private readonly RegisterItemEstoqueUseCase _registerItemEstoqueUseCase;
-        private readonly GetItemEstoqueByIdUseCase _getItemEstoqueByIdUseCase;
-
-        private readonly GetItemEstoqueAllUseCase _getAllItemEstoqueUseCase;
+        private readonly RegisterItemEstoqueUseCase _registerUseCase;
+        private readonly GetItemEstoqueByIdUseCase _getByIdUseCase;
+        private readonly GetItemEstoqueAllUseCase _getAllUseCase;
+        private readonly UpdateItemEstoqueUseCase _updateUseCase;
+        private readonly DeleteItemEstoqueUseCase _deleteUseCase;
 
         public EstoqueController(
-            RegisterItemEstoqueUseCase registerItemEstoqueUseCase,
-            GetItemEstoqueByIdUseCase getItemEstoqueByIdUseCase,
-            GetItemEstoqueAllUseCase getAllItemEstoqueUseCase)
+            RegisterItemEstoqueUseCase registerUseCase,
+            GetItemEstoqueByIdUseCase getByIdUseCase,
+            GetItemEstoqueAllUseCase getAllUseCase,
+            UpdateItemEstoqueUseCase updateUseCase,
+            DeleteItemEstoqueUseCase deleteUseCase)
         {
-            _registerItemEstoqueUseCase = registerItemEstoqueUseCase;
-            _getItemEstoqueByIdUseCase = getItemEstoqueByIdUseCase;
-            _getAllItemEstoqueUseCase = getAllItemEstoqueUseCase;
+            _registerUseCase = registerUseCase;
+            _getByIdUseCase = getByIdUseCase;
+            _getAllUseCase = getAllUseCase;
+            _updateUseCase = updateUseCase;
+            _deleteUseCase = deleteUseCase;
         }
 
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ResponseItemEstoqueJson), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseErrorMenssageJson), StatusCodes.Status404NotFound)]
+        [HttpGet]
+        public ActionResult<IEnumerable<ResponseItemEstoqueJson>> GetAll()
+        {
+            return Ok(_getAllUseCase.ExecuteGetAll());
+        }
+
+        [HttpGet("{id:long}")]
         public ActionResult<ResponseItemEstoqueJson> GetById(long id)
         {
             try
             {
-                var response = _getItemEstoqueByIdUseCase.Execute(id);
-
-                return Ok(response); // Retorna HTTP 200 com os dados encontrados
+                return Ok(_getByIdUseCase.Execute(id));
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException exception)
             {
-                return NotFound(new ResponseErrorMenssageJson(ex.Message)); // Retorna HTTP 404 se não achar
+                return NotFound(new ResponseErrorMenssageJson(exception.Message));
             }
         }
 
-
-
         [HttpPost]
-        //Para o Swagger mostrar certinho os StatusCode e documentar certinho os dados,
-        //usamos o atributo ProducesResponseType, que indica o tipo de retorno e o código de status HTTP esperado para a ação.
-        //typeof(object) indica que o tipo de retorno é um objeto genérico, e StatusCodes.Status201Created indica que a ação retorna um código de status HTTP 201 Created.
-        [ProducesResponseType(typeof(ResponseItemEstoqueJson), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(ResponseErrorMenssageJson), StatusCodes.Status400BadRequest)]
-        public ActionResult Register([FromBody] RequestItemEstoqueJson request) //Usei o [FromBody] para indicar que o parâmetro request deve ser desserializado a partir do corpo da requisição HTTP.
-        //O parâmetro request é do tipo RequestItemEstoqueJson, que é uma classe que representa os dados enviados na requisição para registrar um item no estoque.
+        public ActionResult<ResponseItemEstoqueJson> Register([FromBody] RequestItemEstoqueJson request)
         {
             try
             {
-                // declarei uma variavel UseCase com registerItemEstoqueUseCase, que é a classe que implementa a lógica de negócio para registrar um item no estoque.
-                var response = _registerItemEstoqueUseCase.Execute(request);// chamei o método Execute da classe RegisterItemEstoqueUseCase, passando o parâmetro request, que contém os dados do item a ser registrado.
-                return Created(string.Empty, response); //retornei um resultado HTTP 201 Created, indicando que o item foi registrado com sucesso. O segundo parâmetro response é o objeto que contém os dados do item registrado, que será serializado em JSON e enviado na resposta.
-                }
-            catch (ArgumentException ex) //Aqui estou capturando a exceção do tipo ArgumentException, que é lançada quando os dados recebidos na requisição são inválidos.
-            {
-                return BadRequest(new ResponseErrorMenssageJson(ex.Message)); //Aqui estou retornando um resultado HTTP 400 Bad Request, indicando que os dados recebidos na requisição são inválidos. O parâmetro ex.Message contém a mensagem de erro que foi lançada na exceção.
+                var response = _registerUseCase.Execute(request);
+                return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
             }
-            catch
+            catch (ArgumentException exception)
             {
-                return (StatusCode(StatusCodes.Status500InternalServerError, new ResponseErrorMenssageJson("Erro Desconhecido!."))); //Aqui estou retornando um resultado HTTP 500 Internal Server Error, indicando que ocorreu um erro inesperado ao processar a requisição. A mensagem de erro é genérica, pois não queremos expor detalhes do erro para o cliente.
+                return BadRequest(new ResponseErrorMenssageJson(exception.Message));
             }
         }
 
-
-
-        [HttpPut("{id}")]
-        public ActionResult<object> Put()
+        [HttpPut("{id:long}")]
+        public async Task<ActionResult<ResponseItemEstoqueJson>> Update(long id, [FromBody] RequestItemEstoqueJson request)
         {
-            return Ok();
+            try
+            {
+                return Ok(await _updateUseCase.Execute(id, request));
+            }
+            catch (ArgumentException exception)
+            {
+                return BadRequest(new ResponseErrorMenssageJson(exception.Message));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return NotFound(new ResponseErrorMenssageJson(exception.Message));
+            }
         }
 
-        [HttpDelete("{id}")]
-        public ActionResult Delete(int id)
+        [HttpDelete("{id:long}")]
+        public ActionResult Delete(long id)
         {
-            return NoContent();
+            try
+            {
+                _deleteUseCase.ExecuteDelete(id);
+                return NoContent();
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return NotFound(new ResponseErrorMenssageJson(exception.Message));
+            }
+            catch (InvalidOperationException exception)
+            {
+                return Conflict(new ResponseErrorMenssageJson(exception.Message));
+            }
         }
-
-        [HttpGet()]
-        [ProducesResponseType(typeof(ResponseItemEstoqueJson), StatusCodes.Status200OK)]
-        public ActionResult<ResponseItemEstoqueJson> GetAll()
-        {
-            return Ok(_getAllItemEstoqueUseCase.ExecuteGetAll());
-
-        }
-
-
     }
-
 }

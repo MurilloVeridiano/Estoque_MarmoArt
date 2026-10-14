@@ -1,7 +1,6 @@
 using MarmorariaProjeto.Infrastructure.Persistence;
-using MarmorariaProjeto.UseCases.ItemEstoque.Register;
 
-namespace MarmorariaProjeto.UseCases.ItemEstoque.GetById
+namespace MarmorariaProjeto.UseCases.ItemEstoque
 {
     public class GetItemEstoqueByIdUseCase
     {
@@ -25,8 +24,13 @@ namespace MarmorariaProjeto.UseCases.ItemEstoque.GetById
             // Mapeia a entidade do banco para o JSON de resposta
             return new ResponseItemEstoqueJson
             {
+                Id = entidade.Id,
+                Categoria = entidade.Categoria,
                 Nome = entidade.Nome,
-                Quantidade = entidade.QuantidadeAtual
+                Quantidade = entidade.QuantidadeAtual,
+                QuantidadeMinima = entidade.EstoqueMinimo,
+                UnidadeMedida = entidade.UnidadeMedida,
+                Fornecedor = entidade.Fornecedor
             };
         }
     }

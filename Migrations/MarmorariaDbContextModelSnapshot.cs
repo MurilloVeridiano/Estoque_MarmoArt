@@ -22,64 +22,6 @@ namespace MarmorariaProjeto.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.HistoricoEntrada", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("Data")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("ItemEstoqueId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("ItensEstoqueId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Quantidade")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItensEstoqueId");
-
-                    b.ToTable("HistoricosEntrada");
-                });
-
-            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.HistoricoSaida", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("Data")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Funcionario")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("ItemEstoqueId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("ItensEstoqueId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Quantidade")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItensEstoqueId");
-
-                    b.ToTable("HistoricosSaida");
-                });
-
             modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.ItensEstoque", b =>
                 {
                     b.Property<long>("Id")
@@ -106,25 +48,97 @@ namespace MarmorariaProjeto.Migrations
                     b.Property<int>("QuantidadeAtual")
                         .HasColumnType("int");
 
+                    b.Property<string>("UnidadeMedida")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("un");
+
                     b.HasKey("Id");
 
                     b.ToTable("ItensEstoque");
                 });
 
-            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.HistoricoEntrada", b =>
+            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.Login", b =>
                 {
-                    b.HasOne("MarmorariaProjeto.Domain.Entities.ItensEstoque", "ItensEstoque")
-                        .WithMany()
-                        .HasForeignKey("ItensEstoqueId");
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
 
-                    b.Navigation("ItensEstoque");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Logins");
                 });
 
-            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.HistoricoSaida", b =>
+            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.MovimentacaoEstoque", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AjusteAcao")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FuncionarioEntregou")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FuncionarioPegou")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ItemEstoqueId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Local")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Observacao")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantidade")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemEstoqueId");
+
+                    b.ToTable("MovimentacaoEstoque");
+                });
+
+            modelBuilder.Entity("MarmorariaProjeto.Domain.Entities.MovimentacaoEstoque", b =>
                 {
                     b.HasOne("MarmorariaProjeto.Domain.Entities.ItensEstoque", "ItensEstoque")
                         .WithMany()
-                        .HasForeignKey("ItensEstoqueId");
+                        .HasForeignKey("ItemEstoqueId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ItensEstoque");
                 });

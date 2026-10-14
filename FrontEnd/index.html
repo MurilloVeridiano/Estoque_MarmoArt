@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarmoArt - Gestão de Estoque</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-slate-100 font-sans text-slate-800 antialiased flex flex-col md:flex-row overflow-hidden">
+
+    <div id="loginScreen" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950 p-4">
+        <div class="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+            <div class="mb-7 text-center">
+                <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white"><i class="fa-solid fa-gem text-2xl"></i></div>
+                <h1 class="text-2xl font-black tracking-widest text-slate-900">MARMOART</h1>
+                <p id="authSubtitle" class="mt-2 text-sm text-slate-500">Entre para acessar o estoque</p>
+            </div>
+            <form id="authForm" class="space-y-4">
+                <div>
+                    <label for="authUsername" class="mb-1 block text-xs font-semibold uppercase text-slate-600">Usuário</label>
+                    <input id="authUsername" autocomplete="username" required maxlength="100" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <div>
+                    <label for="authPassword" class="mb-1 block text-xs font-semibold uppercase text-slate-600">Senha</label>
+                    <input id="authPassword" type="password" autocomplete="current-password" required minlength="8" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900">
+                </div>
+                <p id="authError" role="alert" class="hidden rounded-xl bg-rose-50 p-3 text-sm text-rose-700"></p>
+                <button id="authSubmit" type="submit" class="w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Entrar</button>
+            </form>
+            <button id="bootstrapToggle" type="button" class="mt-5 hidden w-full text-sm font-medium text-slate-600 hover:text-slate-900">Criar primeiro acesso</button>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="bg-slate-900 text-slate-300 w-full md:w-64 flex-shrink-0 flex flex-col transition-all duration-300 z-40 border-r border-slate-800">
+        <!-- 3D Logo Header Area -->
+        <div class="h-28 px-6 flex flex-col justify-center border-b border-slate-800/80 bg-slate-950/40">
+            <div class="relative group cursor-pointer">
+                <!-- 3D Effect Text Logo -->
+                <h1 class="text-2xl font-black tracking-widest text-white uppercase drop-shadow-[0_4px_3px_rgba(0,0,0,0.9)] select-none">
+                    MARMOART
+                </h1>
+                <p class="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400 mt-1 select-none">
+                    Mármores & Granitos
+                </p>
+            </div>
+            <button onclick="toggleMobileSidebar()" class="absolute top-6 right-6 md:hidden text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+            <p class="px-3 text-[10px] font-semibold tracking-wider text-slate-500 uppercase mb-2">Menu Principal</p>
+            
+            <a href="#" onclick="switchPage('movimentacao', event)" id="nav-movimentacao" class="flex items-center space-x-3 px-3 py-3 rounded-xl text-sm font-medium bg-slate-800 text-white shadow-sm transition-colors">
+                <i class="fa-solid fa-right-left w-5 text-center"></i>
+                <span>Movimentação</span>
+            </a>
+
+            <a href="#" onclick="switchPage('estoque', event)" id="nav-estoque" class="flex items-center space-x-3 px-3 py-3 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors text-slate-400">
+                <i class="fa-solid fa-boxes-stacked w-5 text-center"></i>
+                <span>Estoque</span>
+            </a>
+
+            <a href="#" onclick="switchPage('relatorios', event)" id="nav-relatorios" class="flex items-center space-x-3 px-3 py-3 rounded-xl text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors text-slate-400">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                <span>Relatórios</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer / User info -->
+        <div class="p-4 border-t border-slate-800 bg-slate-950/40">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-white font-bold text-xs">
+                    AC
+                </div>
+                <div class="overflow-hidden">
+                    <p id="signedInUser" class="text-xs font-semibold text-white truncate">Almoxarifado Central</p>
+                    <p class="text-[10px] text-slate-400 truncate">Sessão Ativa</p>
+                </div>
+                <button onclick="logout()" title="Sair" class="ml-auto rounded-lg px-2 py-1 text-slate-400 hover:bg-slate-800 hover:text-white"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- Top Header Bar -->
+        <header class="bg-white border-b border-slate-200 h-20 flex-shrink-0 px-4 sm:px-8 flex items-center justify-between shadow-sm z-30">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-700 hover:text-slate-900 p-2">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+                <div>
+                    <span id="headerSubtitle" class="text-xs uppercase tracking-widest text-slate-500 block">Gestão de Inventário</span>
+                    <h2 id="headerTitle" class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 uppercase">
+                        Movimentação
+                    </h2>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs text-slate-500">Mármores & Granitos</p>
+                    <p class="text-sm font-medium text-slate-800">Versão 2.4 Pro</p>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-800 font-bold shadow-sm">
+                    <i class="fa-solid fa-gem text-slate-900"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Pages Container -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8 flex flex-col">
+            
+            <!-- ================= PAGE 1: MOVIMENTAÇÃO ================= -->
+            <div id="page-movimentacao" class="page-content flex-1 flex flex-col">
+                
+                <!-- Action & Filter Bar -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 mb-6 flex flex-col gap-6">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+                        
+                        <!-- Filter Data (Start & End) -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Período (Início / Fim)</label>
+                            <div class="grid grid-cols-2 gap-2 h-[42px]">
+                                <div class="relative h-full">
+                                    <input type="date" id="filterStartDate" title="Data Início" class="w-full h-full px-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+                                </div>
+                                <div class="relative h-full">
+                                    <input type="date" id="filterEndDate" title="Data Fim" class="w-full h-full px-2 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+                                </div>
+                            </div>
+                            <!-- Quick Date Shortcuts: Hoje, Semana, Mês -->
+                            <div class="flex items-center space-x-1.5 mt-2">
+                                <button type="button" onclick="setQuickDate('today')" class="text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-colors">Hoje</button>
+                                <button type="button" onclick="setQuickDate('week')" class="text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-colors">Semana</button>
+                                <button type="button" onclick="setQuickDate('month')" class="text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-colors">Mês</button>
+                                <button type="button" onclick="setQuickDate('clear')" class="text-[10px] font-medium text-rose-600 hover:underline px-1 py-0.5">Limpar</button>
+                            </div>
+                        </div>
+
+                        <!-- Filter Categoria -->
+                        <div>
+                            <label for="filterCategory" class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Categoria</label>
+                            <div class="relative h-[42px]">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-layer-group text-xs"></i>
+                                </span>
+                                <select id="filterCategory" class="w-full h-full pl-9 pr-8 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all appearance-none cursor-pointer">
+                                    <option value="">Todas as Categorias</option>
+                                    <option value="Itens">Itens</option>
+                                    <option value="EPI">EPI</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Tipo -->
+                        <div>
+                            <label for="filterType" class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Tipo</label>
+                            <div class="relative h-[42px]">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-filter text-xs"></i>
+                                </span>
+                                <select id="filterType" class="w-full h-full pl-9 pr-8 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all appearance-none cursor-pointer">
+                                    <option value="">Todos os Tipos</option>
+                                    <option value="Entrada">Entrada</option>
+                                    <option value="Saída">Saída</option>
+                                    <option value="Ajuste">Ajuste</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Filter Pesquisa -->
+                        <div>
+                            <label for="filterSearch" class="block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide">Pesquisa</label>
+                            <div class="relative h-[42px]">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-search text-xs"></i>
+                                </span>
+                                <input type="text" id="filterSearch" placeholder="Item, código ou obs..." class="w-full h-full pl-9 pr-3 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all">
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Add Button Row -->
+                    <div class="flex justify-end pt-3 border-t border-slate-100">
+                        <button onclick="openModal()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 text-sm">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>ADICIONAR</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Table Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="py-4 px-6">Data</th>
+                                    <th class="py-4 px-6">Tipo</th>
+                                    <th class="py-4 px-6">Categoria</th>
+                                    <th class="py-4 px-6">Item</th>
+                                    <th class="py-4 px-6">Funcionário</th>
+                                    <th class="py-4 px-6">Responsável</th>
+                                    <th class="py-4 px-6 text-center">Quantidade</th>
+                                    <th class="py-4 px-6 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="movementsTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+                        <p class="text-base font-medium text-slate-600">Nenhuma movimentação encontrada</p>
+                        <p class="text-xs text-slate-400 mt-1">Tente ajustar seus filtros ou adicione uma nova movimentação.</p>
+                    </div>
+
+                    <!-- Pagination Footer with single active page box and arrows -->
+                    <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-between">
+                        <div class="text-xs text-slate-500" id="paginationInfo">
+                            Mostrando 0 a 0 de 0 registros
+                        </div>
+                        <div class="flex items-center space-x-2" id="paginationControls">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ================= PAGE 2: ESTOQUE ================= -->
+            <div id="page-estoque" class="page-content hidden flex-1 flex flex-col">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- 1. Total de Itens -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-400 transition-all" onclick="filterStockStatus('')">
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Total de Itens</p>
+                            <h3 id="stockTotalCount" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                    </div>
+                    <!-- 2. EPIS -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-400 transition-all" onclick="filterStockCategory('EPI')">
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase font-semibold">EPIs</p>
+                            <h3 id="stockEpiCount" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-helmet-safety"></i>
+                        </div>
+                    </div>
+                    <!-- 3. Cubas & Tanques -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-400 transition-all" onclick="filterStockCategory('Cubas & Tanques')">
+                        <div>
+                            <p class="text-xs text-slate-500 uppercase font-semibold">Cubas & Tanques</p>
+                            <h3 id="stockCubasCount" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-sink"></i>
+                        </div>
+                    </div>
+                    <!-- 4. Alerta (Estoque Crítico) -->
+                    <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center justify-between cursor-pointer hover:bg-amber-50/50 transition-all group" onclick="filterStockCritical()">
+                        <div>
+                            <p class="text-xs text-amber-600 uppercase font-bold tracking-wide">Alerta</p>
+                            <h3 id="stockCriticalCount" class="text-2xl font-bold text-amber-700 mt-1">0 Alertas</h3>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-base font-bold text-slate-900 uppercase">Estoque Atual</h3>
+                            <span id="stockFilterBadge" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-medium">Filtrando: Crítico</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="text" id="stockSearch" oninput="renderStockTable()" placeholder="Pesquisar produto em estoque..." class="px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-slate-900">
+                            <!-- Cadastrar Item Button -->
+                            <button onclick="openStockModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm transition-all flex items-center space-x-2 shadow-sm">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                                <span>Cadastrar Item</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs uppercase tracking-wider font-semibold">
+                                    <th class="py-3 px-4">Categoria</th>
+                                    <th class="py-3 px-4">Item</th>
+                                    <th class="py-3 px-4 text-right">Quantidade</th>
+                                    <th class="py-3 px-4 text-right">Qtd Mínima</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4">Fornecedor</th>
+                                    <th class="py-3 px-4 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= PAGE 3: RELATORIOS ================= -->
+            <div id="page-relatorios" class="page-content hidden flex-1 flex flex-col">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col">
+                    <h3 class="text-base font-bold text-slate-900 uppercase mb-4">Relatórios de Movimentação</h3>
+                    <p class="text-sm text-slate-600 mb-6">Gere resumos consolidados de entradas e saídas por período e categoria.</p>
+                    <div class="flex gap-4">
+                        <button onclick="exportReportPdf()" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium shadow">Exportar Relatório PDF</button>
+                        <button onclick="exportReportCsv()" class="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-medium">Exportar Planilha CSV</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal for Create/Edit Movement -->
+    <div id="movementModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform scale-95 transition-transform duration-300" id="modalContent">
+            
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="modalTitle" class="text-base font-bold uppercase tracking-wider">Nova Movimentação</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="movementForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="movementId">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="formDate" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Data</label>
+                        <input type="date" id="formDate" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="formType" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Tipo de Movimentação</label>
+                        <select id="formType" onchange="onMovementTypeChange()" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                            <option value="Entrada">Entrada</option>
+                            <option value="Saída">Saída</option>
+                            <option value="Ajuste">Ajuste (Atualização)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Conditional Adjustment Subtype Box (Adicionar ou Retirar) -->
+                <div id="adjustmentSubtypeContainer" class="hidden bg-amber-50 border border-amber-200 p-3.5 rounded-xl">
+                    <label for="formAdjustmentAction" class="block text-xs font-bold text-amber-800 mb-1 uppercase">Tipo de Ajuste no Inventário</label>
+                    <select id="formAdjustmentAction" class="w-full px-3 py-2 bg-white border border-amber-300 rounded-xl text-sm font-semibold text-amber-900 focus:ring-2 focus:ring-amber-600 focus:outline-none">
+                        <option value="Adicionar">Adicionar (Item apareceu / Sobra)</option>
+                        <option value="Retirar">Retirar (Item sumiu / Quebra / Perda)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="formCategory" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Categoria</label>
+                        <select id="formCategory" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                            <option value="Itens">Itens</option>
+                            <option value="EPI">EPI</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="formProduct" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Item</label>
+                        <select id="formProduct" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none"></select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="formEmployee" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Funcionário</label>
+                        <input type="text" id="formEmployee" placeholder="Ex: Carlos Silva" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="formResponsible" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Responsável</label>
+                        <input type="text" id="formResponsible" placeholder="Ex: Marcos Santos" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="formQuantity" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Quantidade (m² ou un)</label>
+                        <input type="number" min="1" step="1" id="formQuantity" placeholder="Ex: 45" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="formLocation" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Local / Pátio (Depósito)</label>
+                        <input type="text" id="formLocation" placeholder="Ex: Pátio A - Bloco 3" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="formNotes" class="block text-xs font-semibold text-slate-700 uppercase">Observações / Projeto</label>
+                        <div class="relative group cursor-pointer" onclick="showHelpTooltip(event)">
+                            <button type="button" class="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center hover:bg-slate-300 transition-colors">
+                                <i class="fa-solid fa-question text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="formNotes" rows="2" placeholder="Digite aqui a observação que aparecerá no botão com ponto de exclamação (!)..." class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm transition-colors shadow-md">
+                        Salvar Movimentação
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Dialog Message -->
+    <div id="messageDialog" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+            <div id="dialogIcon" class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h4 id="dialogTitle" class="text-base font-bold text-slate-900 mb-1">Sucesso</h4>
+            <p id="dialogMessage" class="text-sm text-slate-600 mb-5">Operação realizada com sucesso.</p>
+            <button onclick="closeDialog()" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm transition-colors">
+                Entendi
+            </button>
+        </div>
+    </div>
+
+    <!-- Observation Detail Modal -->
+    <div id="obsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 class="text-base font-bold uppercase tracking-wider flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-amber-400"></i>
+                    <span>Observação da Movimentação</span>
+                </h3>
+                <button onclick="closeObsModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <p id="obsModalText" class="text-slate-700 text-sm bg-slate-50 p-4 rounded-xl border border-slate-200 whitespace-pre-line min-h-[80px]">Nenhuma observação informada.</p>
+                <div class="mt-6 flex justify-end">
+                    <button onclick="closeObsModal()" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm transition-colors">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Register Stock Item -->
+    <div id="stockModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden transform scale-95 transition-transform duration-300" id="stockModalContent">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <h3 id="stockModalTitle" class="text-base font-bold uppercase tracking-wider">Cadastrar Novo Item no Estoque</h3>
+                <button onclick="closeStockModal()" class="text-slate-400 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <form id="stockForm" onsubmit="handleStockFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="stockItemId">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="stockFormCategory" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Categoria</label>
+                        <input type="text" id="stockFormCategory" placeholder="Ex: Itens, EPI, Cubas & Tanques" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="stockFormProduct" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Item / Descrição</label>
+                        <input type="text" id="stockFormProduct" placeholder="Ex: Rebolo" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="stockFormQuantity" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Qtd Inicial</label>
+                        <input type="number" min="0" step="1" id="stockFormQuantity" placeholder="0" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="stockFormMinQuantity" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Qtd Mínima</label>
+                        <input type="number" min="0" step="1" id="stockFormMinQuantity" placeholder="10" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="stockFormUnit" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Unidade</label>
+                        <select id="stockFormUnit" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                            <option value="un">un</option>
+                            <option value="tubos">tubos</option>
+                            <option value="caixas">caixas</option>
+                            <option value="kg">kg</option>
+                            <option value="l">l</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label for="stockFormSupplier" class="block text-xs font-semibold text-slate-700 mb-1 uppercase">Fornecedor</label>
+                    <input type="text" id="stockFormSupplier" placeholder="Ex: Distribuidora Geral" required class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-slate-900 focus:outline-none">
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-200">
+                    <button type="button" onclick="closeStockModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl text-sm transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-xl text-sm transition-colors shadow-md">
+                        Cadastrar Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Page routing switcher
+        function switchPage(pageId, event) {
+            if (event) event.preventDefault();
+            
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            
+            // Show target page
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.remove('hidden');
+
+            // Update nav active states
+            document.querySelectorAll('aside nav a').forEach(a => {
+                a.classList.remove('bg-slate-800', 'text-white', 'shadow-sm');
+                a.classList.add('text-slate-400');
+            });
+
+            const activeNav = document.getElementById(`nav-${pageId}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-slate-400');
+                activeNav.classList.add('bg-slate-800', 'text-white', 'shadow-sm');
+            }
+
+            // Update header titles
+            const titleMap = {
+                'movimentacao': { title: 'Movimentação', subtitle: 'Gestão de Inventário' },
+                'estoque': { title: 'Estoque', subtitle: 'Gestão de Inventário' },
+                'relatorios': { title: 'Relatórios', subtitle: 'Análises e Estatísticas' }
+            };
+
+            if (titleMap[pageId]) {
+                document.getElementById('headerTitle').textContent = titleMap[pageId].title;
+                document.getElementById('headerSubtitle').textContent = titleMap[pageId].subtitle;
+            }
+
+            // Close mobile sidebar if open
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 768) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        }
+
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('translate-x-0');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+
+        let movements = [];
+        let stockItems = [];
+
+        let stockFilterMode = 'all'; 
+        let stockCategoryFilter = '';
+
+        function renderStockTable() {
+            const searchVal = document.getElementById('stockSearch').value.toLowerCase().trim();
+            const badge = document.getElementById('stockFilterBadge');
+
+            if (stockFilterMode === 'critical') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Filtrando: Alerta (≤ Mínimo)';
+            } else if (stockFilterMode === 'category') {
+                badge.classList.remove('hidden');
+                badge.textContent = `Categoria: ${stockCategoryFilter}`;
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            const filtered = stockItems.filter(item => {
+                let matchesMode = true;
+                if (stockFilterMode === 'critical') {
+                    matchesMode = item.quantity <= item.minQuantity;
+                } else if (stockFilterMode === 'category') {
+                    matchesMode = item.category === stockCategoryFilter;
+                }
+
+                const matchesSearch = searchVal ? (
+                    item.product.toLowerCase().includes(searchVal) ||
+                    item.category.toLowerCase().includes(searchVal) ||
+                    item.supplier.toLowerCase().includes(searchVal)
+                ) : true;
+
+                return matchesMode && matchesSearch;
+            });
+
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+
+            // Update header card counters
+            document.getElementById('stockTotalCount').textContent = stockItems.length;
+            document.getElementById('stockEpiCount').textContent = stockItems.filter(i => i.category === 'EPI').length;
+            document.getElementById('stockCubasCount').textContent = stockItems.filter(i => i.category === 'Cubas & Tanques').length;
+            const criticalCount = stockItems.filter(i => i.quantity <= i.minQuantity).length;
+            document.getElementById('stockCriticalCount').textContent = `${criticalCount} Alertas`;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum item encontrado no estoque com estes critérios.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isCritical = item.quantity <= item.minQuantity;
+                const isZero = item.quantity === 0;
+                const tr = document.createElement('tr');
+                tr.className = isCritical ? 'bg-amber-50/40 hover:bg-amber-50 transition-colors' : 'hover:bg-slate-50 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-medium"><span class="px-2 py-1 rounded bg-slate-100 text-xs">${escapeHtml(item.category)}</span></td>
+                    <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(item.product)}</td>
+                    <td class="py-3 px-4 text-right font-bold ${isCritical ? 'text-amber-700' : 'text-slate-900'}">${item.quantity.toFixed(2)} ${item.unit}</td>
+                    <td class="py-3 px-4 text-right text-slate-500">${item.minQuantity.toFixed(2)} ${item.unit}</td>
+                    <td class="py-3 px-4">
+                        ${isCritical ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Baixo Estoque</span>' : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Normal</span>'}
+                    </td>
+                    <td class="py-3 px-4 text-slate-700">${escapeHtml(item.supplier)}</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center space-x-2">
+                            <button onclick="viewStockDetail(${item.id})" title="Detalhes" class="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg">Detalhes</button>
+                            <button onclick="deleteStockItem(${item.id})" title="${isZero ? 'Remover Item' : 'Quantidade precisa ser 0 para remover'}" class="px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${isZero ? 'bg-rose-50 hover:bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}">Remover</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openStockModal() {
+            const modal = document.getElementById('stockModal');
+            const content = document.getElementById('stockModalContent');
+            document.getElementById('stockForm').reset();
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        }
+
+        function closeStockModal() {
+            const modal = document.getElementById('stockModal');
+            const content = document.getElementById('stockModalContent');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+        }
+
+        function handleStockFormSubmit(e) {
+            e.preventDefault();
+            const category = document.getElementById('stockFormCategory').value;
+            const product = document.getElementById('stockFormProduct').value;
+            const quantity = parseFloat(document.getElementById('stockFormQuantity').value);
+            const minQuantity = parseFloat(document.getElementById('stockFormMinQuantity').value);
+            const unit = document.getElementById('stockFormUnit').value;
+            const supplier = document.getElementById('stockFormSupplier').value;
+
+            const newId = stockItems.length > 0 ? Math.max(...stockItems.map(s => s.id)) + 1 : 1;
+            stockItems.unshift({ id: newId, category, product, quantity, minQuantity, supplier, unit });
+
+            closeStockModal();
+            renderStockTable();
+            showDialog('Sucesso', 'Item cadastrado com sucesso no estoque!', 'success');
+        }
+
+        function deleteStockItem(id) {
+            const item = stockItems.find(s => s.id === id);
+            if (!item) return;
+
+            if (item.quantity > 0) {
+                showDialog('Atenção', `Não é possível remover o item "${item.product}" pois a quantidade em estoque é ${item.quantity} ${item.unit}. A quantidade deve estar zerada (0) para exclusão.`, 'info');
+                return;
+            }
+
+            if (confirm(`Tem certeza que deseja remover permanentemente o item "${item.product}" do estoque?`)) {
+                stockItems = stockItems.filter(s => s.id !== id);
+                renderStockTable();
+                showDialog('Removido', 'Item excluído do estoque com sucesso.', 'success');
+            }
+        }
+
+        function filterStockCritical() {
+            stockFilterMode = 'critical';
+            renderStockTable();
+        }
+
+        function filterStockCategory(cat) {
+            stockFilterMode = 'category';
+            stockCategoryFilter = cat;
+            renderStockTable();
+        }
+
+        function filterStockStatus(mode) {
+            stockFilterMode = mode;
+            renderStockTable();
+        }
+
+        function viewStockDetail(id) {
+            const item = stockItems.find(s => s.id === id);
+            if (item) {
+                showDialog('Detalhes do Item', `Item: ${item.product}\nCategoria: ${item.category}\nQuantidade Atual: ${item.quantity} ${item.unit}\nMínimo Requerido: ${item.minQuantity} ${item.unit}\nFornecedor: ${item.supplier}`, 'info');
+            }
+        }
+
+        let currentPageNum = 1;
+        const itemsPerPage = 5;
+
+        const tableBody = document.getElementById('movementsTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const filterStartDate = document.getElementById('filterStartDate');
+        const filterEndDate = document.getElementById('filterEndDate');
+        const filterCategory = document.getElementById('filterCategory');
+        const filterSearch = document.getElementById('filterSearch');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const paginationControls = document.getElementById('paginationControls');
+
+        filterStartDate.addEventListener('input', renderTable);
+        filterEndDate.addEventListener('input', renderTable);
+        filterCategory.addEventListener('change', renderTable);
+        const filterType = document.getElementById('filterType');
+        if(filterType) filterType.addEventListener('change', renderTable);
+        filterSearch.addEventListener('input', renderTable);
+
+        function setQuickDate(type) {
+            const today = new Date();
+            const formatDateStr = (d) => d.toISOString().split('T')[0];
+
+            if (type === 'today') {
+                const dateStr = formatDateStr(today);
+                filterStartDate.value = dateStr;
+                filterEndDate.value = dateStr;
+            } else if (type === 'week') {
+                const firstDayOfWeek = new Date(today);
+                const day = today.getDay();
+                const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+                firstDayOfWeek.setDate(diff);
+                
+                filterStartDate.value = formatDateStr(firstDayOfWeek);
+                filterEndDate.value = formatDateStr(today);
+            } else if (type === 'month') {
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+                filterStartDate.value = formatDateStr(firstDayOfMonth);
+                filterEndDate.value = formatDateStr(lastDayOfMonth);
+            } else if (type === 'clear') {
+                filterStartDate.value = '';
+                filterEndDate.value = '';
+            }
+            renderTable();
+        }
+
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function renderTable() {
+            const startVal = filterStartDate.value;
+            const endVal = filterEndDate.value;
+            const catVal = filterCategory.value;
+            const typeVal = filterType ? filterType.value : '';
+            const searchVal = filterSearch.value.toLowerCase().trim();
+
+            const filtered = movements.filter(item => {
+                let matchDate = true;
+                if (startVal && endVal) {
+                    matchDate = item.date >= startVal && item.date <= endVal;
+                } else if (startVal) {
+                    matchDate = item.date >= startVal;
+                } else if (endVal) {
+                    matchDate = item.date <= endVal;
+                }
+
+                const matchCat = catVal ? item.category === catVal : true;
+                const matchType = typeVal ? item.type === typeVal : true;
+                const matchSearch = searchVal ? (
+                    item.product.toLowerCase().includes(searchVal) || 
+                    item.employee.toLowerCase().includes(searchVal) ||
+                    item.responsible.toLowerCase().includes(searchVal) ||
+                    item.notes.toLowerCase().includes(searchVal) ||
+                    item.category.toLowerCase().includes(searchVal)
+                ) : true;
+
+                return matchDate && matchCat && matchType && matchSearch;
+            });
+
+            const totalItems = filtered.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            if (currentPageNum > totalPages) currentPageNum = totalPages;
+            if (currentPageNum < 1) currentPageNum = 1;
+
+            const startIdx = (currentPageNum - 1) * itemsPerPage;
+            const paginatedItems = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+            tableBody.innerHTML = '';
+
+            if (paginatedItems.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.remove('flex');
+                emptyState.classList.add('hidden');
+
+                paginatedItems.forEach(item => {
+                    const isEntrada = item.type === 'Entrada';
+                    const isAjuste = item.type === 'Ajuste';
+                    
+                    let typeDisplay = item.type;
+                    if (isAjuste && item.adjustmentAction) {
+                        typeDisplay = `Ajuste (${item.adjustmentAction})`;
+                    }
+
+                    const badgeClass = isEntrada 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : (isAjuste ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200');
+                    
+                    const iconClass = isEntrada 
+                        ? 'fa-arrow-down' 
+                        : (isAjuste ? (item.adjustmentAction === 'Retirar' ? 'fa-arrow-up text-rose-600' : 'fa-arrow-down text-emerald-600') : 'fa-arrow-up');
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50/80 transition-colors';
+                    tr.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-slate-900">${formatDate(item.date)}</td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+                                <i class="fa-solid ${iconClass} text-[10px]"></i>
+                                <span>${typeDisplay}</span>
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                                ${escapeHtml(item.category)}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="font-semibold text-slate-800">${escapeHtml(item.product)}</div>
+                        </td>
+                        <td class="py-4 px-6 text-slate-700 font-medium">${escapeHtml(item.employee)}</td>
+                        <td class="py-4 px-6 text-slate-700 font-medium">${escapeHtml(item.responsible)}</td>
+                        <td class="py-4 px-6 text-center font-semibold text-slate-900">${item.quantity.toLocaleString('pt-BR')}</td>
+                        <td class="py-4 px-6 text-center">
+                            <div class="flex items-center justify-center space-x-2">
+                                <button onclick="viewObservation(${item.id})" title="Ver Observação" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 flex items-center justify-center transition-colors shadow-sm">
+                                    <i class="fa-solid fa-exclamation text-xs font-bold"></i>
+                                </button>
+                                <button onclick="editMovement(${item.id})" title="Editar" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button onclick="deleteMovement(${item.id})" title="Excluir" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+
+            const startDisplay = totalItems > 0 ? startIdx + 1 : 0;
+            const endDisplay = Math.min(startIdx + itemsPerPage, totalItems);
+            paginationInfo.textContent = `Mostrando ${startDisplay} a ${endDisplay} de ${totalItems} registros`;
+
+            renderPaginationControls(totalPages);
+        }
+
+        function viewObservation(id) {
+            const item = movements.find(m => m.id === id);
+            const modal = document.getElementById('obsModal');
+            const textEl = document.getElementById('obsModalText');
+            if (item) {
+                textEl.textContent = item.notes && item.notes.trim() !== '' ? item.notes : 'Nenhuma observação informada para esta movimentação.';
+            }
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeObsModal() {
+            const modal = document.getElementById('obsModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function showHelpTooltip(e) {
+            showDialog('Ajuda sobre Observações', 'O texto digitado neste campo ficará vinculado a esta movimentação e poderá ser consultado a qualquer momento clicando no botão com o símbolo de exclamação (!) na tabela.', 'info');
+        }
+
+        function renderPaginationControls(totalPages) {
+            paginationControls.innerHTML = '';
+
+            if (totalPages < 1) totalPages = 1;
+            if (currentPageNum > totalPages) currentPageNum = totalPages;
+            if (currentPageNum < 1) currentPageNum = 1;
+
+            const prevBtn = document.createElement('button');
+            prevBtn.innerHTML = `<i class="fa-solid fa-chevron-left text-xs"></i>`;
+            prevBtn.className = `w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-medium transition-colors ${currentPageNum === 1 ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`;
+            prevBtn.disabled = currentPageNum === 1;
+            prevBtn.onclick = () => { if (currentPageNum > 1) { currentPageNum--; renderTable(); } };
+            paginationControls.appendChild(prevBtn);
+
+            const pageBox = document.createElement('div');
+            pageBox.textContent = currentPageNum;
+            pageBox.className = 'w-9 h-9 rounded-xl border border-slate-900 bg-slate-900 text-white text-sm font-bold flex items-center justify-center shadow-sm';
+            paginationControls.appendChild(pageBox);
+
+            const nextBtn = document.createElement('button');
+            nextBtn.innerHTML = `<i class="fa-solid fa-chevron-right text-xs"></i>`;
+            nextBtn.className = `w-9 h-9 rounded-xl border flex items-center justify-center text-sm font-medium transition-colors ${currentPageNum >= totalPages ? 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`;
+            nextBtn.disabled = currentPageNum >= totalPages;
+            nextBtn.onclick = () => { if (currentPageNum < totalPages) { currentPageNum++; renderTable(); } };
+            paginationControls.appendChild(nextBtn);
+        }
+
+        // Toggle adjustment subtype box visibility
+        function onMovementTypeChange() {
+            const formType = document.getElementById('formType').value;
+            const container = document.getElementById('adjustmentSubtypeContainer');
+            if (formType === 'Ajuste') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+
+        function openModal(editItem = null) {
+            const modal = document.getElementById('movementModal');
+            const modalContent = document.getElementById('modalContent');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            if (editItem) {
+                modalTitle.textContent = 'Editar Movimentação';
+                document.getElementById('movementId').value = editItem.id;
+                document.getElementById('formDate').value = editItem.date;
+                document.getElementById('formType').value = editItem.type;
+                onMovementTypeChange();
+                if (editItem.type === 'Ajuste' && editItem.adjustmentAction) {
+                    document.getElementById('formAdjustmentAction').value = editItem.adjustmentAction;
+                }
+                document.getElementById('formCategory').value = editItem.category;
+                document.getElementById('formProduct').value = editItem.product;
+                document.getElementById('formEmployee').value = editItem.employee || '';
+                document.getElementById('formResponsible').value = editItem.responsible || '';
+                document.getElementById('formQuantity').value = editItem.quantity;
+                document.getElementById('formLocation').value = editItem.location || '';
+                document.getElementById('formNotes').value = editItem.notes || '';
+            } else {
+                modalTitle.textContent = 'Nova Movimentação';
+                document.getElementById('movementForm').reset();
+                document.getElementById('movementId').value = '';
+                document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+                onMovementTypeChange();
+            }
+
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('movementModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('movementId').value;
+            const date = document.getElementById('formDate').value;
+            const type = document.getElementById('formType').value;
+            const adjustmentAction = type === 'Ajuste' ? document.getElementById('formAdjustmentAction').value : null;
+            const category = document.getElementById('formCategory').value;
+            const product = document.getElementById('formProduct').value;
+            const employee = document.getElementById('formEmployee').value;
+            const responsible = document.getElementById('formResponsible').value;
+            const quantity = parseFloat(document.getElementById('formQuantity').value);
+            const location = document.getElementById('formLocation').value;
+            const notes = document.getElementById('formNotes').value;
+
+            if (id) {
+                const index = movements.findIndex(m => m.id == id);
+                if (index !== -1) {
+                    movements[index] = { id: parseInt(id), date, type, adjustmentAction, category, product, employee, responsible, quantity, location, notes };
+                }
+                showDialog('Sucesso', 'Movimentação atualizada com sucesso!', 'success');
+            } else {
+                const newId = movements.length > 0 ? Math.max(...movements.map(m => m.id)) + 1 : 1;
+                movements.unshift({ id: newId, date, type, adjustmentAction, category, product, employee, responsible, quantity, location, notes });
+                showDialog('Sucesso', 'Nova movimentação cadastrada com sucesso!', 'success');
+            }
+
+            closeModal();
+            renderTable();
+        }
+
+        function editMovement(id) {
+            const item = movements.find(m => m.id === id);
+            if (item) openModal(item);
+        }
+
+        function deleteMovement(id) {
+            const item = movements.find(m => m.id === id);
+            if (item) {
+                const confirmDelete = confirm(`Tem certeza que deseja excluir a movimentação de "${item.product}"?`);
+                if (confirmDelete) {
+                    movements = movements.filter(m => m.id !== id);
+                    renderTable();
+                    showDialog('Excluído', 'Movimentação removida com sucesso.', 'info');
+                }
+            }
+        }
+
+        function showDialog(title, message, type = 'success') {
+            const dialog = document.getElementById('messageDialog');
+            const dialogTitle = document.getElementById('dialogTitle');
+            const dialogMessage = document.getElementById('dialogMessage');
+            const dialogIcon = document.getElementById('dialogIcon');
+
+            dialogTitle.textContent = title;
+            dialogMessage.textContent = message;
+
+            if (type === 'success') {
+                dialogIcon.className = 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl';
+                dialogIcon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            } else {
+                dialogIcon.className = 'w-12 h-12 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-3 text-xl';
+                dialogIcon.innerHTML = '<i class="fa-solid fa-info"></i>';
+            }
+
+            dialog.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function closeDialog() {
+            const dialog = document.getElementById('messageDialog');
+            dialog.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.onload = function() {
+            renderTable();
+            renderStockTable();
+        };   
+    </script>
+    <script>
+        const apiRoot = '/api';
+        let accessToken = sessionStorage.getItem('marmoart-token');
+        let signedInUsername = sessionStorage.getItem('marmoart-username') || '';
+        let bootstrapRequired = false;
+        let bootstrapMode = false;
+
+        async function apiRequest(path, options = {}) {
+            const headers = new Headers(options.headers || {});
+            headers.set('Accept', 'application/json');
+            if (options.body) headers.set('Content-Type', 'application/json');
+            if (accessToken && !path.startsWith('/auth/')) {
+                headers.set('Authorization', `Bearer ${accessToken}`);
+            }
+
+            const response = await fetch(`${apiRoot}${path}`, { ...options, headers });
+            const responseText = response.status === 204 ? '' : await response.text();
+            let responseBody = null;
+            if (responseText) {
+                try {
+                    responseBody = JSON.parse(responseText);
+                } catch {
+                    responseBody = { message: responseText };
+                }
+            }
+
+            if (response.status === 401 && !path.startsWith('/auth/')) {
+                logout();
+                showAuthError('Sua sessão expirou. Entre novamente.');
+            }
+            if (!response.ok) {
+                const errors = responseBody?.errors;
+                const message = responseBody?.message || (Array.isArray(errors) ? errors.join(' ') : null) ||
+                    `A API respondeu com erro ${response.status}.`;
+                throw new Error(message);
+            }
+            return responseBody;
+        }
+
+        function setLoginVisible(visible) {
+            const screen = document.getElementById('loginScreen');
+            screen.classList.toggle('hidden', !visible);
+            screen.classList.toggle('flex', visible);
+        }
+
+        function setBootstrapMode(enabled) {
+            bootstrapMode = enabled;
+            document.getElementById('authSubtitle').textContent = enabled
+                ? 'Crie o primeiro usuário para configurar o acesso'
+                : 'Entre para acessar o estoque';
+            document.getElementById('authSubmit').textContent = enabled ? 'Criar acesso e entrar' : 'Entrar';
+            document.getElementById('authPassword').autocomplete = enabled ? 'new-password' : 'current-password';
+            document.getElementById('bootstrapToggle').textContent = enabled ? 'Voltar para o login' : 'Criar primeiro acesso';
+            document.getElementById('bootstrapToggle').classList.toggle('hidden', !bootstrapRequired);
+            document.getElementById('authError').classList.add('hidden');
+        }
+
+        async function initializeApp() {
+            document.getElementById('authForm').addEventListener('submit', submitAuthentication);
+            document.getElementById('bootstrapToggle').addEventListener('click', () => setBootstrapMode(!bootstrapMode));
+
+            try {
+                const status = await apiRequest('/auth/bootstrap-status');
+                bootstrapRequired = status.required;
+                const filterCategorySelect = document.getElementById('filterCategory');
+                const selectedFilterCategory = filterCategorySelect.value;
+                filterCategorySelect.innerHTML = '<option value="">Todas as Categorias</option>' +
+                    [...new Set(stockItems.map(item => item.category))].map(category =>
+                        `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+                filterCategorySelect.value = selectedFilterCategory;
+                setBootstrapMode(false);
+                if (accessToken) {
+                    document.getElementById('signedInUser').textContent = signedInUsername || 'Usuário';
+                    setLoginVisible(false);
+                    await loadData();
+                } else {
+                    setLoginVisible(true);
+                    if (bootstrapRequired) setBootstrapMode(true);
+                }
+            } catch (error) {
+                setLoginVisible(true);
+                showAuthError(`Não foi possível conectar à API: ${error.message}`);
+            }
+        }
+
+        async function submitAuthentication(event) {
+            event.preventDefault();
+            const errorElement = document.getElementById('authError');
+            errorElement.classList.add('hidden');
+            const payload = {
+                username: document.getElementById('authUsername').value.trim(),
+                password: document.getElementById('authPassword').value
+            };
+            try {
+                const result = await apiRequest(bootstrapMode ? '/auth/bootstrap' : '/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                accessToken = result.token;
+                signedInUsername = result.username;
+                bootstrapRequired = false;
+                sessionStorage.setItem('marmoart-token', accessToken);
+                sessionStorage.setItem('marmoart-username', signedInUsername);
+                document.getElementById('signedInUser').textContent = signedInUsername;
+                document.getElementById('authPassword').value = '';
+                setLoginVisible(false);
+                await loadData();
+            } catch (error) {
+                showAuthError(error.message);
+            }
+        }
+
+        function showAuthError(message) {
+            const element = document.getElementById('authError');
+            element.textContent = message;
+            element.classList.remove('hidden');
+        }
+
+        function logout() {
+            accessToken = null;
+            signedInUsername = '';
+            sessionStorage.removeItem('marmoart-token');
+            sessionStorage.removeItem('marmoart-username');
+            stockItems = [];
+            movements = [];
+            renderStockTable();
+            renderTable();
+            setLoginVisible(true);
+            if (bootstrapRequired) setBootstrapMode(true);
+        }
+
+        function normalizeStock(item) {
+            return {
+                id: item.id,
+                category: item.categoria,
+                product: item.nome,
+                quantity: item.quantidade,
+                minQuantity: item.quantidadeMinima,
+                unit: item.unidadeMedida,
+                supplier: item.fornecedor
+            };
+        }
+
+        function normalizeMovement(item) {
+            return {
+                id: item.id,
+                itemId: item.itemEstoqueId,
+                date: String(item.data).slice(0, 10),
+                type: item.tipo,
+                adjustmentAction: item.ajusteAcao,
+                category: item.categoria,
+                product: item.item,
+                employee: item.funcionarioPegou,
+                responsible: item.funcionarioEntregou,
+                quantity: item.quantidade,
+                location: item.local,
+                notes: item.observacao
+            };
+        }
+
+        async function loadData() {
+            try {
+                const [stockResponse, movementResponse] = await Promise.all([
+                    apiRequest('/Estoque'),
+                    apiRequest('/Movimentacao')
+                ]);
+                stockItems = stockResponse.map(normalizeStock);
+                movements = movementResponse.map(normalizeMovement);
+                refreshCategoryOptions();
+                renderStockTable();
+                renderTable();
+            } catch (error) {
+                showDialog('Erro ao carregar dados', error.message, 'error');
+            }
+        }
+
+        function refreshCategoryOptions() {
+            const categories = [...new Set(stockItems.map(item => item.category).filter(Boolean))].sort();
+            const categorySelect = document.getElementById('formCategory');
+            const currentCategory = categorySelect.value;
+            categorySelect.innerHTML = categories.map(category =>
+                `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+            if (categories.includes(currentCategory)) categorySelect.value = currentCategory;
+            const filterCategorySelect = document.getElementById('filterCategory');
+            const selectedFilterCategory = filterCategorySelect.value;
+            filterCategorySelect.innerHTML = '<option value="">Todas as Categorias</option>' +
+                categories.map(category =>
+                    `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+            filterCategorySelect.value = categories.includes(selectedFilterCategory) ? selectedFilterCategory : '';
+            refreshMovementProductOptions();
+        }
+
+        function refreshMovementProductOptions(selectedId = null) {
+            const category = document.getElementById('formCategory').value;
+            const productSelect = document.getElementById('formProduct');
+            const availableItems = stockItems.filter(item => item.category === category);
+            productSelect.innerHTML = '<option value="">Selecione um item</option>' +
+                availableItems.map(item =>
+                    `<option value="${item.id}">${escapeHtml(item.product)} (${item.quantity} ${escapeHtml(item.unit)})</option>`).join('');
+            if (selectedId != null) productSelect.value = String(selectedId);
+        }
+
+        document.getElementById('formCategory').addEventListener('change', () => refreshMovementProductOptions());
+
+        window.renderStockTable = function() {
+            const searchVal = document.getElementById('stockSearch').value.toLowerCase().trim();
+            const badge = document.getElementById('stockFilterBadge');
+            if (stockFilterMode === 'critical') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Filtrando: Alerta (≤ Mínimo)';
+            } else if (stockFilterMode === 'category') {
+                badge.classList.remove('hidden');
+                badge.textContent = `Categoria: ${stockCategoryFilter}`;
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            const filtered = stockItems.filter(item => {
+                const matchesMode = stockFilterMode === 'critical'
+                    ? item.quantity <= item.minQuantity
+                    : stockFilterMode === 'category' ? item.category === stockCategoryFilter : true;
+                const matchesSearch = !searchVal ||
+                    `${item.product} ${item.category} ${item.supplier}`.toLowerCase().includes(searchVal);
+                return matchesMode && matchesSearch;
+            });
+            document.getElementById('stockTotalCount').textContent = stockItems.length;
+            document.getElementById('stockEpiCount').textContent = stockItems.filter(item => item.category === 'EPI').length;
+            document.getElementById('stockCubasCount').textContent = stockItems.filter(item => item.category === 'Cubas & Tanques').length;
+            document.getElementById('stockCriticalCount').textContent =
+                `${stockItems.filter(item => item.quantity <= item.minQuantity).length} Alertas`;
+
+            const tbody = document.getElementById('stockTableBody');
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-slate-400">Nenhum item encontrado no estoque com estes critérios.</td></tr>';
+                return;
+            }
+            filtered.forEach(item => {
+                const critical = item.quantity <= item.minQuantity;
+                const row = document.createElement('tr');
+                row.className = critical ? 'bg-amber-50/40 hover:bg-amber-50 transition-colors' : 'hover:bg-slate-50 transition-colors';
+                row.innerHTML = `
+                    <td class="py-3 px-4 font-medium"><span class="px-2 py-1 rounded bg-slate-100 text-xs">${escapeHtml(item.category)}</span></td>
+                    <td class="py-3 px-4 font-semibold text-slate-900">${escapeHtml(item.product)}</td>
+                    <td class="py-3 px-4 text-right font-bold ${critical ? 'text-amber-700' : 'text-slate-900'}">${item.quantity} ${escapeHtml(item.unit)}</td>
+                    <td class="py-3 px-4 text-right text-slate-500">${item.minQuantity} ${escapeHtml(item.unit)}</td>
+                    <td class="py-3 px-4">${critical
+                        ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Baixo Estoque</span>'
+                        : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Normal</span>'}</td>
+                    <td class="py-3 px-4 text-slate-700">${escapeHtml(item.supplier)}</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="viewStockDetail(${item.id})" class="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg">Detalhes</button>
+                            <button onclick="openStockModal(${item.id})" class="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded-lg">Editar</button>
+                            <button onclick="deleteStockItem(${item.id})" class="text-xs px-2 py-1 rounded-lg ${item.quantity === 0 ? 'bg-rose-50 hover:bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400'}">Excluir</button>
+                        </div>
+                    </td>`;
+                tbody.appendChild(row);
+            });
+        };
+
+        window.openStockModal = function(itemId = null) {
+            const item = stockItems.find(stock => stock.id === Number(itemId));
+            document.getElementById('stockForm').reset();
+            document.getElementById('stockItemId').value = item ? item.id : '';
+            document.getElementById('stockModalTitle').textContent = item ? 'Editar Item do Estoque' : 'Cadastrar Novo Item no Estoque';
+            document.getElementById('stockFormCategory').value = item?.category || '';
+            document.getElementById('stockFormProduct').value = item?.product || '';
+            document.getElementById('stockFormQuantity').value = item ? item.quantity : '';
+            document.getElementById('stockFormQuantity').readOnly = Boolean(item);
+            document.getElementById('stockFormMinQuantity').value = item ? item.minQuantity : '';
+            document.getElementById('stockFormUnit').value = item?.unit || 'un';
+            document.getElementById('stockFormSupplier').value = item?.supplier || '';
+            document.getElementById('stockModal').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('stockModalContent').classList.remove('scale-95');
+            document.getElementById('stockModalContent').classList.add('scale-100');
+        };
+
+        window.handleStockFormSubmit = async function(event) {
+            event.preventDefault();
+            const id = document.getElementById('stockItemId').value;
+            const body = {
+                categoria: document.getElementById('stockFormCategory').value.trim(),
+                item: document.getElementById('stockFormProduct').value.trim(),
+                quantidadeInicial: Number(document.getElementById('stockFormQuantity').value),
+                quantidadeMinima: Number(document.getElementById('stockFormMinQuantity').value),
+                unidadeMedida: document.getElementById('stockFormUnit').value,
+                fornecedor: document.getElementById('stockFormSupplier').value.trim()
+            };
+            try {
+                await apiRequest(id ? `/Estoque/${id}` : '/Estoque', {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(body)
+                });
+                closeStockModal();
+                await loadData();
+                showDialog('Sucesso', id ? 'Item atualizado.' : 'Item cadastrado no estoque.', 'success');
+            } catch (error) {
+                showDialog('Não foi possível salvar', error.message, 'error');
+            }
+        };
+
+        window.deleteStockItem = async function(id) {
+            const item = stockItems.find(stock => stock.id === id);
+            if (!item) return;
+            if (item.quantity !== 0) {
+                showDialog('Atenção', 'A quantidade em estoque precisa estar zerada para excluir o item.', 'info');
+                return;
+            }
+            if (!confirm(`Excluir "${item.product}"? Itens com histórico não podem ser removidos.`)) return;
+            try {
+                await apiRequest(`/Estoque/${id}`, { method: 'DELETE' });
+                await loadData();
+                showDialog('Excluído', 'Item removido do estoque.', 'success');
+            } catch (error) {
+                showDialog('Não foi possível excluir', error.message, 'error');
+            }
+        };
+
+        window.viewStockDetail = function(id) {
+            const item = stockItems.find(stock => stock.id === id);
+            if (item) {
+                showDialog('Detalhes do Item',
+                    `Item: ${item.product}\nCategoria: ${item.category}\nQuantidade atual: ${item.quantity} ${item.unit}\nMínimo: ${item.minQuantity} ${item.unit}\nFornecedor: ${item.supplier}`, 'info');
+            }
+        };
+
+        window.renderTable = function() {
+            const startVal = filterStartDate.value;
+            const endVal = filterEndDate.value;
+            const categoryVal = filterCategory.value;
+            const typeVal = filterType.value;
+            const searchVal = filterSearch.value.toLowerCase().trim();
+            const filtered = movements.filter(item => {
+                const dateMatches = (!startVal || item.date >= startVal) && (!endVal || item.date <= endVal);
+                const categoryMatches = !categoryVal || item.category === categoryVal;
+                const typeMatches = !typeVal ||
+                    (typeVal === 'Ajuste' ? item.type === 'Ajuste' :
+                        typeVal === 'Saída' ? ['Saída', 'Saida'].includes(item.type) : item.type === typeVal);
+                const searchMatches = !searchVal ||
+                    `${item.product} ${item.employee} ${item.responsible} ${item.notes} ${item.category}`.toLowerCase().includes(searchVal);
+                return dateMatches && categoryMatches && typeMatches && searchMatches;
+            });
+            const pages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+            currentPageNum = Math.min(Math.max(currentPageNum, 1), pages);
+            const start = (currentPageNum - 1) * itemsPerPage;
+            const pageRows = filtered.slice(start, start + itemsPerPage);
+            tableBody.innerHTML = '';
+            emptyState.classList.toggle('hidden', pageRows.length > 0);
+            emptyState.classList.toggle('flex', pageRows.length === 0);
+
+            pageRows.forEach(item => {
+                const typeLabel = item.type === 'Ajuste' ? `Ajuste (${item.adjustmentAction})` : item.type;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-slate-50/80 transition-colors';
+                row.innerHTML = `
+                    <td class="py-4 px-6 font-medium text-slate-900">${formatDate(item.date)}</td>
+                    <td class="py-4 px-6"><span class="rounded-full px-2.5 py-1 text-xs font-semibold ${item.type === 'Entrada' ? 'bg-emerald-50 text-emerald-700' : item.type === 'Ajuste' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'}">${escapeHtml(typeLabel)}</span></td>
+                    <td class="py-4 px-6">${escapeHtml(item.category)}</td>
+                    <td class="py-4 px-6 font-semibold text-slate-800">${escapeHtml(item.product)}</td>
+                    <td class="py-4 px-6">${escapeHtml(item.employee)}</td>
+                    <td class="py-4 px-6">${escapeHtml(item.responsible)}</td>
+                    <td class="py-4 px-6 text-center font-semibold">${item.quantity}</td>
+                    <td class="py-4 px-6 text-center"><div class="flex items-center justify-center gap-2">
+                        <button onclick="viewObservation(${item.id})" title="Observação" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700"><i class="fa-solid fa-circle-info"></i></button>
+                        <button onclick="editMovement(${item.id})" title="Editar" class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteMovement(${item.id})" title="Excluir" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600"><i class="fa-solid fa-trash"></i></button>
+                    </div></td>`;
+                tableBody.appendChild(row);
+            });
+            paginationInfo.textContent = `Mostrando ${filtered.length ? start + 1 : 0} a ${Math.min(start + itemsPerPage, filtered.length)} de ${filtered.length} registros`;
+            renderPaginationControls(pages);
+        };
+
+        window.openModal = function(editItem = null) {
+            const form = document.getElementById('movementForm');
+            form.reset();
+            document.getElementById('movementId').value = editItem ? editItem.id : '';
+            document.getElementById('modalTitle').textContent = editItem ? 'Editar Movimentação' : 'Nova Movimentação';
+            document.getElementById('formDate').value = editItem?.date || new Date().toISOString().slice(0, 10);
+            if (editItem) {
+                document.getElementById('formCategory').value = editItem.category;
+            }
+            refreshMovementProductOptions(editItem?.itemId);
+            document.getElementById('formType').value = editItem?.type || 'Entrada';
+            document.getElementById('formAdjustmentAction').value = editItem?.adjustmentAction || 'Adicionar';
+            document.getElementById('formEmployee').value = editItem?.employee || '';
+            document.getElementById('formResponsible').value = editItem?.responsible || '';
+            document.getElementById('formQuantity').value = editItem?.quantity || '';
+            document.getElementById('formLocation').value = editItem?.location || '';
+            document.getElementById('formNotes').value = editItem?.notes || '';
+            onMovementTypeChange();
+            document.getElementById('movementModal').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('modalContent').classList.remove('scale-95');
+            document.getElementById('modalContent').classList.add('scale-100');
+        };
+
+        window.handleFormSubmit = async function(event) {
+            event.preventDefault();
+            const id = document.getElementById('movementId').value;
+            const body = {
+                itemEstoqueId: Number(document.getElementById('formProduct').value),
+                data: document.getElementById('formDate').value,
+                tipo: document.getElementById('formType').value,
+                ajusteAcao: document.getElementById('formType').value === 'Ajuste'
+                    ? document.getElementById('formAdjustmentAction').value : '',
+                quantidade: Number(document.getElementById('formQuantity').value),
+                funcionarioPegou: document.getElementById('formEmployee').value.trim(),
+                funcionarioEntregou: document.getElementById('formResponsible').value.trim(),
+                local: document.getElementById('formLocation').value.trim(),
+                observacao: document.getElementById('formNotes').value.trim()
+            };
+            try {
+                await apiRequest(id ? `/Movimentacao/${id}` : '/Movimentacao', {
+                    method: id ? 'PUT' : 'POST',
+                    body: JSON.stringify(body)
+                });
+                closeModal();
+                await loadData();
+                showDialog('Sucesso', id ? 'Movimentação atualizada.' : 'Movimentação registrada.', 'success');
+            } catch (error) {
+                showDialog('Não foi possível salvar', error.message, 'error');
+            }
+        };
+
+        window.editMovement = function(id) {
+            const movement = movements.find(item => item.id === id);
+            if (movement) openModal(movement);
+        };
+
+        window.deleteMovement = async function(id) {
+            const movement = movements.find(item => item.id === id);
+            if (!movement || !confirm(`Excluir a movimentação de "${movement.product}"? O saldo do estoque será recalculado.`)) return;
+            try {
+                await apiRequest(`/Movimentacao/${id}`, { method: 'DELETE' });
+                await loadData();
+                showDialog('Excluído', 'Movimentação removida e saldo recalculado.', 'success');
+            } catch (error) {
+                showDialog('Não foi possível excluir', error.message, 'error');
+            }
+        };
+
+        window.showDialog = function(title, message, type = 'success') {
+            document.getElementById('dialogTitle').textContent = title;
+            document.getElementById('dialogMessage').textContent = message;
+            const icon = document.getElementById('dialogIcon');
+            icon.className = type === 'error'
+                ? 'w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-xl'
+                : 'w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 text-xl';
+            icon.innerHTML = type === 'error' ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-check"></i>';
+            document.getElementById('messageDialog').classList.remove('opacity-0', 'pointer-events-none');
+        };
+
+        window.exportReportCsv = function() {
+            const columns = ['Data', 'Tipo', 'Categoria', 'Item', 'Funcionário', 'Responsável', 'Quantidade', 'Local', 'Observação'];
+            const quote = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            const rows = movements.map(item => [
+                item.date, item.type, item.category, item.product, item.employee,
+                item.responsible, item.quantity, item.location, item.notes
+            ]);
+            const csv = '\uFEFF' + [columns, ...rows].map(row => row.map(quote).join(';')).join('\r\n');
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            link.download = `relatorio-movimentacoes-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        };
+
+        window.exportReportPdf = function() {
+            window.print();
+        };
+
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>

@@ -1,8 +1,9 @@
 using MarmorariaProjeto.Domain.Entities;
 using MarmorariaProjeto.Infrastructure.Persistence;
-using MarmorariaProjeto.UseCases.ItemEstoque.Register;
 
-namespace MarmorariaProjeto.UseCases.ItemEstoque.Register
+//Cadastra novos produtos no estoque, recebendo o nome e a quantidade do produto. Retorna o nome e a quantidade cadastrada.
+
+namespace MarmorariaProjeto.UseCases.ItemEstoque
 {
     public class RegisterItemEstoqueUseCase
     {
@@ -23,11 +24,14 @@ namespace MarmorariaProjeto.UseCases.ItemEstoque.Register
                 throw new ArgumentException("Erro nos Dados recebidos");
             }
 
-            // Usa a classe ItensEstoque que já está na sua pasta Domain.Entities
             var entidade = new ItensEstoque
             {
-                Nome = request.Nome,
-                QuantidadeAtual = request.Quantidade
+                Categoria = request.Categoria.Trim(),
+                Nome = request.Item.Trim(),
+                QuantidadeAtual = request.QuantidadeInicial,
+                EstoqueMinimo = request.QuantidadeMinima,
+                UnidadeMedida = request.UnidadeMedida.Trim(),
+                Fornecedor = request.Fornecedor.Trim()
             };
 
             _dbContext.ItensEstoque.Add(entidade);
@@ -35,8 +39,13 @@ namespace MarmorariaProjeto.UseCases.ItemEstoque.Register
 
             return new ResponseItemEstoqueJson
             {
+                Id = entidade.Id,
+                Categoria = entidade.Categoria,
                 Nome = entidade.Nome,
-                Quantidade = entidade.QuantidadeAtual
+                Quantidade = entidade.QuantidadeAtual,
+                QuantidadeMinima = entidade.EstoqueMinimo,
+                UnidadeMedida = entidade.UnidadeMedida,
+                Fornecedor = entidade.Fornecedor
             };
         }
     }

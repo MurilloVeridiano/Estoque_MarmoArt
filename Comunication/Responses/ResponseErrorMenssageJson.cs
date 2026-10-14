@@ -1,4 +1,4 @@
-namespace MarmorariaProjeto.UseCases.ItemEstoque.Register
+namespace MarmorariaProjeto.UseCases.ItemEstoque
 {
     public class ResponseErrorMenssageJson
     {

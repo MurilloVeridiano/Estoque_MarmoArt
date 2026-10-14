@@ -8,7 +8,7 @@ namespace MarmorariaProjeto.Domain.Entities
         public int QuantidadeAtual { get; set; }
         public string Fornecedor { get; set; } = string.Empty;
         public int EstoqueMinimo { get; set; }
-    
+        public string UnidadeMedida { get; set; } = "un";
 
         public void RegistrarEntrada(int quantidade)
         {
