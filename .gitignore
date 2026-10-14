@@ -1,3 +1,14 @@
+# Dependências e Compilação
 bin/
 obj/
+*.user
 .vs/
+.vscode/
+
+# Configurações sensíveis (evita subir banco e senhas)
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+
+#Arquivo para estudo e rascunho
+conhecimento.cs
