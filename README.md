@@ -22,9 +22,9 @@ O **Estoque MarmoArt** é um sistema completo (API Backend + Dashboard Frontend)
 ## 🛠️ Tecnologias e Arquitetura
 
 - **Linguagem Backend:** C# 13 (.NET 9 ASP.NET Core Web API)
-- **Frontend:** HTML5, CSS3 Moderno, JavaScript ES6+ (Fetch API)
-- **Segurança & Autenticação:** JWT (JSON Web Tokens) e ASP.NET Core `IPasswordHasher`
-- **ORM:** Entity Framework Core 9 (Code-First)
+- **Frontend:** HTML5, CSS3, JavaScript 
+- **Segurança & Autenticação:** JWT (JSON Web Tokens) e ASP.NET Core 
+- **ORM:** Entity Framework Core 9
 - **Banco de Dados:** SQL Server / LocalDB
 - **Validação:** FluentValidation
 - **Arquitetura:** Separação limpa de responsabilidades orientada a casos de uso (*Use Cases*), DTOs (Data Transfer Objects), Controllers REST e Domain Entities.
@@ -34,7 +34,7 @@ O **Estoque MarmoArt** é um sistema completo (API Backend + Dashboard Frontend)
 ## 📋 Funcionalidades Principais
 
 - **Autenticação & Segurança:**
-  - Login seguro com criptografia de senha via hash (`IPasswordHasher`).
+  - Login seguro com criptografia de senha via hash.
   - Proteção de rotas via tokens JWT Bearer.
   - Fluxo inteligente de *Bootstrap* (inicialização e criação do primeiro administrador do sistema).
 - **Controle de Estoque em Tempo Real:** Consulta instantânea do saldo atual de insumos, cubas, tanques, EPIs e materiais disponíveis.
